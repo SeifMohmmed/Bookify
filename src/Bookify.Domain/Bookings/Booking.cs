@@ -56,6 +56,10 @@ public sealed class Booking : Entity
 
     public DateTime? CanceledOnUtc { get; private set; }
 
+    /// <summary>
+    /// Factory method to reserve a booking.
+    /// Calculates pricing and raises a domain event.
+    /// </summary>
     public static Booking Reserve(
         Apartment apartment,
         Guid userId,
@@ -82,5 +86,67 @@ public sealed class Booking : Entity
         apartment.LastBookedOnUtc = utcNow;
 
         return booking;
+    }
+
+    /// <summary>Confirms a reserved booking.</summary>
+    public Result Confirm(DateTime utcNow)
+    {
+        if (Status != BookingStatus.Reserved)
+            return Result.Failure(BookingErrors.NotReserved);
+
+        Status = BookingStatus.Confirmed;
+        ConfirmedOnUtc = utcNow;
+
+        RaiseDomainEvent(new BookingConfirmedDomainEvent(Id));
+
+        return Result.Success();
+    }
+
+    /// <summary>Rejects a reserved booking.</summary>
+    public Result Reject(DateTime utcNow)
+    {
+        if (Status != BookingStatus.Reserved)
+            return Result.Failure(BookingErrors.NotReserved);
+
+        Status = BookingStatus.Rejected;
+        RejectedOnUtc = utcNow;
+
+        RaiseDomainEvent(new BookingRejectedDomainEvent(Id));
+
+        return Result.Success();
+    }
+
+    /// <summary>Marks a confirmed booking as completed.</summary>
+    public Result Complete(DateTime utcNow)
+    {
+        if (Status != BookingStatus.Confirmed)
+            return Result.Failure(BookingErrors.NotConfirmed);
+
+        Status = BookingStatus.Completed;
+        CompletedOnUtc = utcNow;
+
+        RaiseDomainEvent(new BookingCompletedDomainEvent(Id));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Cancels a confirmed booking before it starts.
+    /// </summary>
+    public Result Cancel(DateTime utcNow)
+    {
+        if (Status != BookingStatus.Confirmed)
+            return Result.Failure(BookingErrors.NotConfirmed);
+
+        var currentDate = DateOnly.FromDateTime(utcNow);
+        if (currentDate > Duration.Start)
+            return Result.Failure(BookingErrors.AlreadyStarted);
+
+        Status = BookingStatus.Cancelled;
+        CompletedOnUtc = utcNow;
+
+        RaiseDomainEvent(new BookingCancelledDomainEvent(Id));
+
+        return Result.Success();
     }
 }
