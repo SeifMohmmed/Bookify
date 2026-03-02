@@ -32,7 +32,7 @@ public sealed class Apartment : Entity
 
     public Money CleaningFee { get; private set; }
 
-    public DateTime? LastBookedOnUtc { get; private set; }
+    public DateTime? LastBookedOnUtc { get; internal set; }
 
     public List<Amanity> Amanities { get; private set; } = new();
 }
