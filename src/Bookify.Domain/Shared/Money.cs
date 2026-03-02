@@ -1,4 +1,4 @@
-﻿namespace Bookify.Domain.Apartments;
+﻿namespace Bookify.Domain.Shared;
 /// <summary>
 /// Represents a monetary value in the domain.
 /// Money is a Value Object composed of an amount and a currency.
@@ -22,4 +22,8 @@ public record Money(decimal Amount, Currency Currency)
     }
 
     public static Money Zero() => new(0, Currency.None); // Represents zero money with no currency.
+
+    public static Money Zero(Currency currency) => new(0, currency);
+
+    public bool IsZero() => this == Zero(Currency);
 }
