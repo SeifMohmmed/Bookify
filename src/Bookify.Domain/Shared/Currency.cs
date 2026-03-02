@@ -1,4 +1,4 @@
-﻿namespace Bookify.Domain.Apartments;
+﻿namespace Bookify.Domain.Shared;
 /// <summary>
 /// Represents a currency in the domain as a Value Object.
 /// This is not just a string, but a strongly-typed concept in the domain model.
