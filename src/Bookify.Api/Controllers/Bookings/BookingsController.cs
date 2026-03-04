@@ -9,7 +9,7 @@ namespace Bookify.Api.Controllers.Bookings;
 public class BookingsController(
     ISender sender) : ControllerBase
 {
-    [HttpGet("id")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetBooking(
         Guid id,
         CancellationToken cancellationToken)
