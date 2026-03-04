@@ -1,4 +1,5 @@
-﻿using Bookify.Infrastructure;
+﻿using Bookify.Api.Middleware;
+using Bookify.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookify.Api.Extensions;
@@ -16,5 +17,17 @@ public static class ApplicationBuilderExtension
         using var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         dbContext.Database.Migrate();
+    }
+
+    /// <summary>
+    /// Extension method used to register the custom exception handling middleware
+    /// in the ASP.NET Core request pipeline.
+    /// </summary>
+    public static void UseCustomExceptionHandler(this IApplicationBuilder app)
+    {
+        // Adds ExceptionHandlingMiddleware to the middleware pipeline
+        // This middleware catches unhandled exceptions and returns
+        // standardized error responses (ProblemDetails).
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
     }
 }
