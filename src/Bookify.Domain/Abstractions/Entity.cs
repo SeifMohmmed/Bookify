@@ -9,6 +9,12 @@ public abstract class Entity
         Id = id;
     }
 
+    //EF Migration usage
+    protected Entity()
+    {
+
+    }
+
     public Guid Id { get; init; }  // Unique identifier of the entity.
 
     /// <summary>

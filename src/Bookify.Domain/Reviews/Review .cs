@@ -23,6 +23,10 @@ public class Review : Entity
         CreatedOnUtc = createdOnUtc;
     }
 
+    private Review()
+    {
+
+    }
     public Guid ApartmentId { get; }
     public Guid BookingId { get; }
     public Guid UserId { get; }
