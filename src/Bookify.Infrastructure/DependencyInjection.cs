@@ -5,11 +5,13 @@ using Bookify.Domain.Abstractions;
 using Bookify.Domain.Apartments;
 using Bookify.Domain.Bookings;
 using Bookify.Domain.Users;
+using Bookify.Infrastructure.Authentication;
 using Bookify.Infrastructure.Clock;
 using Bookify.Infrastructure.Data;
 using Bookify.Infrastructure.Email;
 using Bookify.Infrastructure.Repositories;
 using Dapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,31 @@ public static class DependencyInjection
 
         // Register Email service implementation
         services.AddTransient<IEmailService, EmailService>();
+
+        // Register database and repositories
+        AddPersistence(services, configuration);
+
+        // Configure authentication middleware
+        services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+
+        // Bind Authentication settings from configuration (appsettings.json)
+        services.Configure<AuthenticationOptions>(
+            configuration.GetSection("Authentication"));
+
+        // Apply custom JWT options setup
+        services.ConfigureOptions<JwtBearerOptionsSetup>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers persistence layer services
+    /// (EF Core, repositories, Dapper)
+    /// </summary>
+    private static void AddPersistence(IServiceCollection services, IConfiguration configuration)
+    {
 
         // Get connection string from configuration
         var connectionString = configuration.GetConnectionString("Database") ??
@@ -60,7 +87,5 @@ public static class DependencyInjection
         // Register custom Dapper type handler globally
         // This ensures DateOnly works across all Dapper queries
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
-
-        return services;
     }
 }
