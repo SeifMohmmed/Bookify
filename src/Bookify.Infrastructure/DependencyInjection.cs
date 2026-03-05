@@ -99,6 +99,13 @@ public static class DependencyInjection
 
                 httpclient.BaseAddress = new Uri(keycloakOptions.TokenUrl);
             });
+
+        // Register HttpContextAccessor so services can access the current HTTP context
+        services.AddHttpContextAccessor();
+
+        // Register IUserContext implementation for accessing the logged-in user identity
+        services.AddScoped<IUserContext, UserContext>();
+
     }
 
     /// <summary>
