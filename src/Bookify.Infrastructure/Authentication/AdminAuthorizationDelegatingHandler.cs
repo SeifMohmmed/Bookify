@@ -59,7 +59,7 @@ public sealed class AdminAuthorizationDelegatingHandler : DelegatingHandler
             new("client_id", _keycloakOptions.AdminClientId),
 
             // Secret associated with the client
-            new("client_secret", _keycloakOptions.AuthClientSecret),
+            new("client_secret", _keycloakOptions.AdminClientSecret),
 
             // Requested scopes
             new("scope", "openid email"),
@@ -74,7 +74,7 @@ public sealed class AdminAuthorizationDelegatingHandler : DelegatingHandler
         // Create HTTP request to Keycloak token endpoint
         var authorizationRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            new Uri("http://bookify-idp:8080/auth/realms/bookify/protocol/openid-connect/token"))
+            new Uri(_keycloakOptions.TokenUrl))
         {
             Content = authorizationRequestContext
         };
