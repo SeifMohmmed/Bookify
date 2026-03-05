@@ -1,4 +1,5 @@
-﻿using Bookify.Application.Abstractions.Clock;
+﻿using Bookify.Application.Abstractions.Authentication;
+using Bookify.Application.Abstractions.Clock;
 using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Email;
 using Bookify.Domain.Abstractions;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Bookify.Infrastructure;
 public static class DependencyInjection
@@ -48,6 +50,35 @@ public static class DependencyInjection
 
         // Apply custom JWT options setup
         services.ConfigureOptions<JwtBearerOptionsSetup>();
+
+        // Bind the "Keycloak" section from appsettings.json to the KeycloakOptions class.
+        services.Configure<KeycloakOptions>(configuration.GetSection("Keycloak"));
+
+
+        // Register the DelegatingHandler responsible for attaching the admin JWT token
+        // to outgoing HTTP requests sent to the Keycloak Admin API.
+        services.AddTransient<AdminAuthorizationDelegatingHandler>();
+
+
+        // Register a typed HttpClient for the AuthenticationService.
+        // This HttpClient will be used internally by AuthenticationService
+        // to communicate with the Keycloak Admin REST API.
+        services.AddHttpClient<IAuthenticationService, AuthenticationService>((serviceProvider, httpclient) =>
+        {
+            // Resolve Keycloak configuration values using IOptions
+            var keycloakOptions = serviceProvider
+                .GetRequiredService<IOptions<KeycloakOptions>>()
+                .Value;
+
+            // Set the base URL for all Keycloak Admin API requests
+            // Example: http://bookify-idp:8080/auth/admin/realms/bookify/
+            httpclient.BaseAddress = new Uri(keycloakOptions.AdminUrl);
+
+        })
+        // Add a DelegatingHandler to the HttpClient pipeline.
+        // This handler automatically requests a Keycloak access token
+        // and attaches it as a Bearer token to every outgoing request.
+        .AddHttpMessageHandler<AdminAuthorizationDelegatingHandler>();
 
         return services;
     }
