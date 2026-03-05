@@ -39,6 +39,15 @@ public static class DependencyInjection
         // Register database and repositories
         AddPersistence(services, configuration);
 
+        AddAuthentication(services, configuration);
+
+        return services;
+    }
+
+    private static void AddAuthentication(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
         // Configure authentication middleware
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -80,7 +89,16 @@ public static class DependencyInjection
         // and attaches it as a Bearer token to every outgoing request.
         .AddHttpMessageHandler<AdminAuthorizationDelegatingHandler>();
 
-        return services;
+        // HttpClient used to request JWT tokens from Keycloak
+        services.AddHttpClient<IJwtService, JwtService>(
+            (serviceProvider, httpclient) =>
+            {
+                var keycloakOptions = serviceProvider
+                .GetRequiredService<IOptions<KeycloakOptions>>()
+                .Value;
+
+                httpclient.BaseAddress = new Uri(keycloakOptions.TokenUrl);
+            });
     }
 
     /// <summary>
