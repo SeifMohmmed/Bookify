@@ -32,4 +32,28 @@ internal class AuthorizationService
 
         return roles;
     }
+    /// <summary>
+    /// Retrieves all permissions assigned to a user through their roles.
+    /// </summary>
+    /// <param name="identityId">
+    /// Identity provider user identifier (e.g., from Keycloak).
+    /// </param>
+    /// <returns>
+    /// A set of permission names assigned to the user.
+    /// </returns>
+    public async Task<HashSet<string>> GetPermissionsForUserAsync(string identityId)
+    {
+        var permissions = await context.Set<User>()
+            .Where(user => user.IdentityId == identityId)
+            // Flatten all role permissions for the user
+            .SelectMany(user => user.Roles.Select(role => role.Permissions))
+            .FirstAsync();
+
+        // Convert permissions to a hash set of names for fast lookup
+        var permissionSet = permissions
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        return permissionSet;
+    }
 }
