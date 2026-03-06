@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bookify.Api.Controllers.Users;
 [ApiController]
 [Route("users")]
-[AllowAnonymous]
 public class UsersController(
     ISender sender) : ControllerBase
 {
     [HttpGet("me")]
+    [Authorize(Roles = Roles.Registered)]
     public async Task<IActionResult> GetLoggedInUser(CancellationToken cancellationToken)
     {
         var query = new GetLoggedInUserQuery();
@@ -26,6 +26,7 @@ public class UsersController(
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterUserRequest request, CancellationToken cancellationToken)
     {
         var command = new RegisterUserCommand(
@@ -43,6 +44,7 @@ public class UsersController(
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<IActionResult> Login(
         LogInUserRequest request,
         CancellationToken cancellationToken)

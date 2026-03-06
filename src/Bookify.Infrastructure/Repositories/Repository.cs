@@ -32,7 +32,7 @@ internal abstract class Repository<T> where T : Entity
     /// Adds a new entity to the context.
     /// Changes are persisted when UnitOfWork.SaveChangesAsync is called.
     /// </summary>
-    public void Add(T entity)
+    public virtual void Add(T entity)
     {
         context.Add(entity);
     }
