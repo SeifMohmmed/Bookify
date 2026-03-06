@@ -1,33 +1,64 @@
 ﻿using Bookify.Application.Abstractions.Messaging;
+using Bookify.Domain.Abstractions;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace Bookify.Application.Behaviors;
 /// <summary>
-/// Pipeline behavior that logs command execution lifecycle.
+/// MediatR pipeline behavior responsible for logging the lifecycle
+/// of command execution.
+///
+/// It logs:
+/// - When a command starts executing
+/// - Whether the command succeeds or fails
+/// - Any exceptions thrown during execution
+///
+/// This behavior helps provide structured logging for application commands.
 /// </summary>
 public class LoggingBehavior<TRequest, TResponse>
     (ILogger<TRequest> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IBaseCommand
+    where TResponse : Result
 {
+    /// <summary>
+    /// Handles the execution of the request through the pipeline.
+    /// </summary>
+    /// <param name="request">The incoming command request.</param>
+    /// <param name="next">Delegate representing the next step in the pipeline.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The result returned by the request handler.</returns>
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        var name = request.GetType().Name; // Get command name for logging
+        // Get the name of the command being executed
+        var name = request.GetType().Name;
 
         try
         {
-            // Log before command execution
-            logger.LogInformation("Executing command {Command}", name);
+            // Log command execution start
+            logger.LogInformation("Executing request {Request}", name);
 
-            // Continue to the next behavior or the actual handler
+            // Execute next behavior or handler
             var result = await next();
 
-            // Log after successful execution
-            logger.LogInformation("Command {Command} processed successfully", name);
+            if (result.IsSuccess)
+            {
+                // Log after successful execution
+                logger.LogInformation("Request {Request} processed successfully", name);
+            }
+            else
+            {
+                // Attach error details to structured logs
+                using (LogContext.PushProperty("Error", result.Error, true))
+                {
+                    logger.LogError("Request {Request} processed with error", name);
+                }
+            }
+
 
             return result;
         }
@@ -35,7 +66,7 @@ public class LoggingBehavior<TRequest, TResponse>
         catch (Exception ex)
         {
             // Log error if execution fails
-            logger.LogError(ex, "Command {Command} processing failed", name);
+            logger.LogError(ex, "Request {Request} processing failed", name);
 
             throw; // Rethrow exception to preserve pipeline behavior
         }
