@@ -14,6 +14,7 @@ using Bookify.Infrastructure.Email;
 using Bookify.Infrastructure.Repositories;
 using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -160,5 +161,13 @@ public static class DependencyInjection
         services.AddTransient<
             Microsoft.AspNetCore.Authentication.IClaimsTransformation,
             CustomClaimTransformation>();
+
+        // Registers the authorization handler responsible
+        // for validating permission-based requirements.
+        services.AddTransient<IAuthorizationHandler, PermissionAuthoizationHandler>();
+
+        // Registers the custom policy provider that dynamically
+        // generates authorization policies for permissions.
+        services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
     }
 }
