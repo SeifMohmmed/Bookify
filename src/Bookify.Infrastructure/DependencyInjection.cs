@@ -7,6 +7,7 @@ using Bookify.Domain.Apartments;
 using Bookify.Domain.Bookings;
 using Bookify.Domain.Users;
 using Bookify.Infrastructure.Authentication;
+using Bookify.Infrastructure.Authorization;
 using Bookify.Infrastructure.Clock;
 using Bookify.Infrastructure.Data;
 using Bookify.Infrastructure.Email;
@@ -40,6 +41,8 @@ public static class DependencyInjection
         AddPersistence(services, configuration);
 
         AddAuthentication(services, configuration);
+
+        AddAuthorization(services);
 
         return services;
     }
@@ -143,5 +146,19 @@ public static class DependencyInjection
         // Register custom Dapper type handler globally
         // This ensures DateOnly works across all Dapper queries
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+    }
+
+    /// <summary>
+    /// Registers authorization services and claim transformations.
+    /// </summary>
+    private static void AddAuthorization(IServiceCollection services)
+    {
+        // Service used to retrieve roles from the database
+        services.AddScoped<AuthorizationService>();
+
+        // Adds custom claim transformation to enrich the ClaimsPrincipal
+        services.AddTransient<
+            Microsoft.AspNetCore.Authentication.IClaimsTransformation,
+            CustomClaimTransformation>();
     }
 }
