@@ -1,4 +1,5 @@
-﻿using Bookify.Application.Abstractions.Authentication;
+﻿using Asp.Versioning;
+using Bookify.Application.Abstractions.Authentication;
 using Bookify.Application.Abstractions.Caching;
 using Bookify.Application.Abstractions.Clock;
 using Bookify.Application.Abstractions.Data;
@@ -50,6 +51,8 @@ public static class DependencyInjection
         AddCaching(services, configuration);
 
         AddHealthChecks(services, configuration);
+
+        AddApiVersioning(services);
 
         return services;
     }
@@ -212,5 +215,42 @@ public static class DependencyInjection
                 new Uri(configuration["KeyCloak:BaseUrl"]!),
                 HttpMethod.Get,
                 "keycloak");
+    }
+
+    /// <summary>
+    /// Registers and configures API Versioning for controller-based APIs.
+    /// If using Minimal APIs, use the NuGet package "Asp.Versioning.Http".
+    /// </summary>
+    /// <param name="services">Dependency Injection container</param>
+    private static void AddApiVersioning(IServiceCollection services)
+    {
+        services
+            // Register API Versioning
+            .AddApiVersioning(options =>
+            {
+                // Default version if client does not specify one
+                options.DefaultApiVersion = new ApiVersion(1);
+
+                // Add headers in response that show supported API versions
+                options.ReportApiVersions = true;
+
+                // Read the version from the URL segment
+                // Example: /v1/users
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            })
+
+            // Required when using Controllers
+            .AddMvc()
+
+            // Enables Swagger + API Version discovery
+            .AddApiExplorer(options =>
+            {
+                // Format group names as: v1, v2
+                options.GroupNameFormat = "'v'V";
+
+                // Replace version placeholder in route
+                // Example: v{version}/users -> v1/users
+                options.SubstituteApiVersionInUrl = true;
+            });
     }
 }
