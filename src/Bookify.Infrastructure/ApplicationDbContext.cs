@@ -1,20 +1,26 @@
-﻿using Bookify.Application.Exceptions;
+﻿using Bookify.Application.Abstractions.Clock;
+using Bookify.Application.Exceptions;
 using Bookify.Domain.Abstractions;
-using MediatR;
+using Bookify.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Bookify.Infrastructure;
 public sealed class ApplicationDbContext : DbContext, IUnitOfWork
 {
-    // MediatR publisher used to dispatch domain events
-    private readonly IPublisher _publisher;
+    private static readonly JsonSerializerSettings JsonSerializerSettings = new()
+    {
+        TypeNameHandling = TypeNameHandling.All,
+    };
+
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public ApplicationDbContext(
         DbContextOptions options,
-        IPublisher publisher)
+        IDateTimeProvider dateTimeProvider)
         : base(options)
     {
-        _publisher = publisher;
+        _dateTimeProvider = dateTimeProvider;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -35,11 +41,10 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     {
         try
         {
+            AddDomainEventsAsOutboxMessages();
+
             // Persist changes first (transaction happens here)
             var result = await base.SaveChangesAsync(cancellationToken);
-
-            // Publish domain events after successful commit
-            await PublishDomainEventsAsync();
 
             return result;
 
@@ -56,35 +61,32 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     }
 
     /// <summary>
-    /// Collects all domain events from tracked entities
-    /// and publishes them via MediatR.
+    /// Collects domain events from entities and stores them
+    /// as Outbox messages before saving to the database.
+    /// This ensures reliable event publishing.
     /// </summary>
-    private async Task PublishDomainEventsAsync()
+    private void AddDomainEventsAsOutboxMessages()
     {
-        /*
-          1️) Get all tracked entities that inherit from Entity base class.
-          2️) Extract their domain events.
-          3️) Clear events from entity (to prevent duplicate publishing).
-          4️) Publish each event using MediatR.
-        */
-
-        var domainEvents = ChangeTracker
+        var outboxMessages = ChangeTracker
             .Entries<Entity>() // All tracked domain entities
             .Select(entry => entry.Entity)
             .SelectMany(entity =>
             {
                 var domainEvents = entity.GetDomainEvents();
 
-                entity.ClearDomainEvents(); // Prevent duplicate dispatch
+                // Clear events to avoid publishing duplicates
+                entity.ClearDomainEvents();
 
                 return domainEvents;
             })
+            .Select(domainEvent => new OutboxMessage(
+                Guid.CreateVersion7(),
+                _dateTimeProvider.UtcNow,
+                domainEvent.GetType().Name,
+                JsonConvert.SerializeObject(domainEvent, JsonSerializerSettings)))
             .ToList();
 
-        // Publish events one by one
-        foreach (var domainEvent in domainEvents)
-        {
-            await _publisher.Publish(domainEvent);
-        }
+        // Store events in the Outbox table
+        AddRange(outboxMessages);
     }
 }
