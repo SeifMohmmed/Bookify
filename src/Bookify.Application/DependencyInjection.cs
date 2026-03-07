@@ -18,6 +18,10 @@ public static class DependencyInjection
 
             // Register ValidationBehavior as a global pipeline behavior
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
+
+            // Registers the query caching pipeline behavior in MediatR
+            // This ensures all queries implementing ICachedQuery go through the caching pipeline.
+            configuration.AddOpenBehavior(typeof(QueryCachingBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
