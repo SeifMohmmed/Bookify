@@ -175,13 +175,20 @@ public static class DependencyInjection
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
     }
 
+    /// <summary>
+    /// Registers Redis distributed caching and the application caching service.
+    /// </summary>
     private static void AddCaching(IServiceCollection services, IConfiguration configuration)
     {
+        // Retrieve Redis connection string from configuration
         var connectionString = configuration.GetConnectionString("Cache") ??
                                 throw new ArgumentNullException(nameof(configuration));
 
-        services.AddStackExchangeRedisCache(options => options.Configuration = connectionString);
+        // Register Redis distributed cache
+        services.AddStackExchangeRedisCache(options =>
+        options.Configuration = connectionString);
 
+        // Register cache abstraction
         services.AddSingleton<ICacheService, CacheService>();
     }
 }
