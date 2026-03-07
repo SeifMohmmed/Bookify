@@ -14,6 +14,7 @@ using Bookify.Infrastructure.Caching;
 using Bookify.Infrastructure.Clock;
 using Bookify.Infrastructure.Data;
 using Bookify.Infrastructure.Email;
+using Bookify.Infrastructure.Outbox;
 using Bookify.Infrastructure.Repositories;
 using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Quartz;
 
 namespace Bookify.Infrastructure;
 public static class DependencyInjection
@@ -53,6 +55,8 @@ public static class DependencyInjection
         AddHealthChecks(services, configuration);
 
         AddApiVersioning(services);
+
+        AddBackgroundJobs(services, configuration);
 
         return services;
     }
@@ -252,5 +256,22 @@ public static class DependencyInjection
                 // Example: v{version}/users -> v1/users
                 options.SubstituteApiVersionInUrl = true;
             });
+    }
+
+    private static void AddBackgroundJobs(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // Bind Outbox configuration from appsettings
+        services.Configure<OutboxOptions>(configuration.GetSection("Outbox"));
+
+        // Register Quartz scheduler
+        services.AddQuartz();
+
+        // Run Quartz as a hosted service
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+        // Register job configuration
+        services.ConfigureOptions<ProcessOutboxMessagesJobSetup>();
     }
 }
