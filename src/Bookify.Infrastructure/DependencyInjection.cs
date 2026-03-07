@@ -49,6 +49,8 @@ public static class DependencyInjection
 
         AddCaching(services, configuration);
 
+        AddHealthChecks(services, configuration);
+
         return services;
     }
 
@@ -190,5 +192,25 @@ public static class DependencyInjection
 
         // Register cache abstraction
         services.AddSingleton<ICacheService, CacheService>();
+    }
+
+    /// <summary>
+    /// Registers health checks for external dependencies used by the application.
+    /// These checks help monitoring tools determine the health of the system.
+    /// </summary>
+    private static void AddHealthChecks(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHealthChecks()
+            // Checks connectivity to the PostgreSQL database
+            .AddNpgSql(configuration.GetConnectionString("Database")!)
+
+            // Checks connectivity to the Redis distributed cache
+            .AddRedis(configuration.GetConnectionString("Cache")!)
+
+            // Checks availability of the Keycloak identity server
+            .AddUrlGroup(
+                new Uri(configuration["KeyCloak:BaseUrl"]!),
+                HttpMethod.Get,
+                "keycloak");
     }
 }
