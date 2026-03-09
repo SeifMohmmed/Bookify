@@ -7,6 +7,7 @@ using Bookify.Application.Abstractions.Email;
 using Bookify.Domain.Abstractions;
 using Bookify.Domain.Apartments;
 using Bookify.Domain.Bookings;
+using Bookify.Domain.Reviews;
 using Bookify.Domain.Users;
 using Bookify.Infrastructure.Authentication;
 using Bookify.Infrastructure.Authorization;
@@ -148,6 +149,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
 
         // Register Unit of Work
         // ApplicationDbContext implements IUnitOfWork
