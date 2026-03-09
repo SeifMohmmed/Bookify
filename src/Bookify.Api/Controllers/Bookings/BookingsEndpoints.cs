@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using Asp.Versioning.Builder;
-using Bookify.Application.Booking.GetBooking;
-using Bookify.Application.Booking.ReserveBooking;
+using Bookify.Application.Bookings.GetBooking;
+using Bookify.Application.Bookings.ReserveBooking;
 using MediatR;
 
 namespace Bookify.Api.Controllers.Bookings;

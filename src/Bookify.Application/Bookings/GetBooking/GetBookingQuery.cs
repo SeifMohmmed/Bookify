@@ -1,6 +1,6 @@
 ﻿using Bookify.Application.Abstractions.Caching;
 
-namespace Bookify.Application.Booking.GetBooking;
+namespace Bookify.Application.Bookings.GetBooking;
 /// <summary>
 /// Query used to retrieve a booking by its unique identifier.
 /// This query supports caching to improve read performance.

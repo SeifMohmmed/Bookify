@@ -1,6 +1,6 @@
 ﻿using Bookify.Application.Abstractions.Messaging;
 
-namespace Bookify.Application.Booking.ReserveBooking;
+namespace Bookify.Application.Bookings.ReserveBooking;
 public record ReserveBookingCommand(
     Guid ApartmentId,
     Guid UserId,
