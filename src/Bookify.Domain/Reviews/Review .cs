@@ -12,7 +12,7 @@ public class Review : Entity
         Guid bookingId,
         Guid userId,
         Rating rating,
-        string comment,
+        Comment comment,
         DateTime createdOnUtc) : base(id)
     {
         ApartmentId = apartmentId;
@@ -31,13 +31,13 @@ public class Review : Entity
     public Guid BookingId { get; }
     public Guid UserId { get; }
     public Rating Rating { get; }
-    public string Comment { get; }
+    public Comment Comment { get; }
     public DateTime CreatedOnUtc { get; }
 
     public static Result<Review> Create(
         Booking booking,
         Rating rating,
-        string comment,
+        Comment comment,
         DateTime createdOnUtc)
     {
         if (booking.Status != BookingStatus.Completed)

@@ -13,24 +13,25 @@ internal sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.ToTable("reviews");
 
-        builder.HasKey(x => x.Id);
+        builder.HasKey(review => review.Id);
 
         builder.Property(review => review.Rating)
             .HasConversion(rating => rating.Value, value => Rating.Create(value).Value);
 
-        builder.Property(x => x.Comment)
-            .HasMaxLength(200);
+        builder.Property(review => review.Comment)
+            .HasMaxLength(200)
+            .HasConversion(comment => comment.Value, value => new Comment(value));
 
         builder.HasOne<Apartment>()
             .WithMany()
-            .HasForeignKey(x => x.ApartmentId);
-
-        builder.HasOne<User>()
-            .WithMany()
-            .HasForeignKey(x => x.UserId);
+            .HasForeignKey(review => review.ApartmentId);
 
         builder.HasOne<Booking>()
             .WithMany()
-            .HasForeignKey(x => x.BookingId);
+            .HasForeignKey(review => review.BookingId);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(review => review.UserId);
     }
 }
