@@ -25,7 +25,7 @@ public class PricingService
             };
         }
 
-        var amanitesUpCharge = Money.Zero();
+        var amanitesUpCharge = Money.Zero(currency);
         if (perentageUpCharge > 0)
         {
             amanitesUpCharge = new Money(
