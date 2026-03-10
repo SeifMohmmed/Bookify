@@ -1,9 +1,9 @@
 ﻿namespace Bookify.Infrastructure.Authentication;
 public sealed class KeycloakOptions
 {
-    public string AdminUrl { get; init; } = string.Empty;
+    public string AdminUrl { get; set; } = string.Empty;
 
-    public string TokenUrl { get; init; } = string.Empty;
+    public string TokenUrl { get; set; } = string.Empty;
 
     public string AdminClientId { get; init; } = string.Empty;
 
